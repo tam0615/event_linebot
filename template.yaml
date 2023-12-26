@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  event_linebot
+
+  Sample SAM Template for event_linebot
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 128
+
+Resources:
+  EventLinebotFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: source/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Timeout: 15
+      Architectures:
+      - x86_64
+      Events:
+        Linebot:
+          Type: Api 
+          Properties:
+            Path: /detail
+            Method: post
+      Environment:
+        Variables:
+          YOUR_CHANNEL_ACCESS_TOKEN: 8tpDSEMzc3vqNjD2JOoyKJM18URrE6NxX6rjFJIJv5E9wWjro7tDz9jHQUkROyBvVgRuxj2V7+zlLlQWNSZyKGjEjoMTad6lebLAYwtGVGDTUCmsF/Wn/gtnzoF7tk1AwHQzxMGTwWW5fRuW6KGYiQdB04t89/1O/w1cDnyilFU=
+          YOUR_CHANNEL_SECRET: 35f88f8cfe60e3098f340446419f8043
+          SPREADSHEET_KEY: 1Z2DPcAZ_S6RuBLcW7z7HlNpnHhnOjZSg6b60ZlcYlps
+          TZ: Asia/Tokyo
+
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Ref: ApplicationResourceGroup
+      AutoConfigurationEnabled: 'true'
+Outputs:
+  LinebotApi:
+    Description: API Gateway endpoint URL for Prod stage for Event Linebot function
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/detail/"
+  LinebotFunction:
+    Description: Event Linebot Lambda Function ARN
+    Value: !GetAtt EventLinebotFunction.Arn
+  LinebotFunctionIamRole:
+    Description: Implicit IAM Role created for Event Linebot function
+    Value: !GetAtt EventLinebotFunctionRole.Arn
